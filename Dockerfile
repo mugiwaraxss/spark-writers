@@ -25,9 +25,6 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Copy Docker-specific .env file
-COPY docker/.env /var/www/html/.env
-
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
@@ -37,7 +34,13 @@ COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.con
 # Enable Apache modules
 RUN a2enmod rewrite
 
-# Create startup script
+# Create a simple .env file for the build process
+RUN cp .env.example .env && \
+    echo "APP_KEY=base64:GJtCzLKDm+uP62afANMC5yuY1e11KDdgM+M0DK3m45w=" >> .env && \
+    echo "APP_ENV=production" >> .env && \
+    echo "APP_DEBUG=false" >> .env
+
+# Create startup script that will use environment variables from Render
 RUN echo '#!/bin/bash\n\
 # Apply optimizations\n\
 php artisan optimize\n\
