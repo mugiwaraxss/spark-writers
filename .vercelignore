@@ -1,0 +1,6 @@
+/vendor
+/.git
+/node_modules
+.env
+.env.*
+*.log 

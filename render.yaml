@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: spark-writers
+    env: php
+    buildCommand: "./build.sh"
+    startCommand: "heroku-php-apache2 public/"
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: CACHE_DRIVER
+        value: array 
