@@ -1,14 +1,15 @@
 services:
   - type: web
     name: spark-writers
-    env: php
-    buildCommand: "./build.sh"
-    startCommand: "heroku-php-apache2 public/"
+    env: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: false
+      - key: APP_KEY
+        value: base64:GJtCzLKDm+uP62afANMC5yuY1e11KDdgM+M0DK3m45w=
       - key: LOG_CHANNEL
         value: stderr
       - key: SESSION_DRIVER
