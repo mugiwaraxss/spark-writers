@@ -29,6 +29,9 @@
     "CACHE_DRIVER": "array",
     "LOG_CHANNEL": "stderr",
     "SESSION_DRIVER": "cookie",
-    "ASSET_URL": "https://spark-writers.vercel.app"
+    "ASSET_URL": "https://spark-writers.vercel.app",
+    "DB_CONNECTION": "pgsql",
+    "DB_SSL": "true",
+    "POSTGRES_SSL": "true"
   }
 }
