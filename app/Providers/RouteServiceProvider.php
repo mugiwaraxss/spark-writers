@@ -44,5 +44,12 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });
+
+        // Add this condition for Vercel asset handling
+        if (config('app.env') === 'production') {
+            $this->app->bind('path.public', function() {
+                return base_path();
+            });
+        }
     }
-} 
+}

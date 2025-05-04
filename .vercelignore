@@ -1,6 +1,13 @@
 /vendor
-/.git
+/storage/*.key
 /node_modules
+/.pnp
+.pnp.js
 .env
 .env.*
-*.log 
+!.env.example
+.phpunit.result.cache
+docker/
+tests/
+README.md
+*.log
