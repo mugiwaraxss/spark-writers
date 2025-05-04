@@ -23,6 +23,9 @@ return new class extends Migration
             $table->dateTime('deadline');
             $table->enum('status', ['pending', 'assigned', 'in_progress', 'completed', 'revision', 'disputed'])->default('pending');
             $table->decimal('price', 10, 2);
+            $table->string('citation_style')->nullable();
+            $table->integer('sources_required')->nullable();
+            $table->json('services')->nullable();
             $table->timestamps();
         });
         

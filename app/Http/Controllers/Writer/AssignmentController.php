@@ -208,12 +208,6 @@ class AssignmentController extends Controller
             return back()->with('error', 'This order is not available for claiming.');
         }
         
-        // Check if writer has expertise in the subject
-        $writer_expertise = $writer->writerProfile->expertise_areas ?? [];
-        if (!in_array($order->subject_area, $writer_expertise)) {
-            return back()->with('error', 'You do not have the required expertise for this order.');
-        }
-        
         // Assign order to writer
         $order->writer_id = $writer->id;
         $order->status = 'assigned';

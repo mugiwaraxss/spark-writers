@@ -18,6 +18,7 @@ class WriterProfile extends Model
         'expertise_areas',
         'hourly_rate',
         'rating',
+        'completed_orders',
         'availability_status'
     ];
 

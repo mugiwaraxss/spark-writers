@@ -134,7 +134,7 @@
                     
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Subject:</p>
-                        <p class="text-base font-medium text-gray-900 dark:text-white">{{ ucfirst(str_replace('_', ' ', $order->subject)) }}</p>
+                        <p class="text-base font-medium text-gray-900 dark:text-white">{{ ucfirst(str_replace('_', ' ', $order->subject_area)) }}</p>
                     </div>
                     
                     <div>
@@ -144,17 +144,17 @@
                     
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Citation Style:</p>
-                        <p class="text-base font-medium text-gray-900 dark:text-white">{{ strtoupper($order->citation_style) }}</p>
+                        <p class="text-base font-medium text-gray-900 dark:text-white">{{ strtoupper($order->citation_style ?? 'Not specified') }}</p>
                     </div>
                     
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Number of Pages:</p>
-                        <p class="text-base font-medium text-gray-900 dark:text-white">{{ $order->page_count }} (approx. {{ $order->page_count * 275 }} words)</p>
+                        <p class="text-base font-medium text-gray-900 dark:text-white">{{ ceil($order->word_count / 275) }} (approx. {{ $order->word_count }} words)</p>
                     </div>
                     
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Sources Required:</p>
-                        <p class="text-base font-medium text-gray-900 dark:text-white">{{ $order->sources_required }}</p>
+                        <p class="text-base font-medium text-gray-900 dark:text-white">{{ $order->sources_required ?? 'Not specified' }}</p>
                     </div>
                     
                     @if($order->services && count($order->services) > 0)

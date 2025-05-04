@@ -21,6 +21,9 @@ class Order extends Model
         'status',
         'price',
         'submission_note',
+        'citation_style',
+        'sources_required',
+        'services',
     ];
 
     /**
@@ -30,6 +33,7 @@ class Order extends Model
      */
     protected $casts = [
         'deadline' => 'datetime',
+        'services' => 'array',
     ];
 
     public function client()
@@ -65,5 +69,40 @@ class Order extends Model
     public function review()
     {
         return $this->hasOne(Review::class);
+    }
+
+    protected static function booted()
+    {
+        static::updated(function ($order) {
+            if ($order->isDirty('status') && $order->status === 'completed' && !$order->writerPayment) {
+                // Calculate writer's payment (40% of order price)
+                $writerAmount = $order->price * 0.4;
+
+                // Create the writer payment
+                WriterPayment::create([
+                    'writer_id' => $order->writer_id,
+                    'order_id' => $order->id,
+                    'amount' => $writerAmount,
+                    'status' => 'pending',
+                    'payment_date' => null,
+                ]);
+                
+                // Update writer statistics
+                if ($order->writer_id) {
+                    $writer = $order->writer;
+                    if ($writer && $writer->writerProfile) {
+                        // Count completed orders for this writer
+                        $completedOrders = Order::where('writer_id', $order->writer_id)
+                                             ->where('status', 'completed')
+                                             ->count();
+                        
+                        // Update writer profile with the new completed orders count
+                        $writer->writerProfile->update([
+                            'completed_orders' => $completedOrders,
+                        ]);
+                    }
+                }
+            }
+        });
     }
 }

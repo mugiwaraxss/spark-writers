@@ -59,14 +59,21 @@ class WriterManagementController extends Controller
         }
         
         $writer_user->load('writerProfile');
-        // Get completed orders count and active orders count
-        $completedOrders = $writer_user->writtenOrders()->where('status', 'completed')->count();
-        $activeOrders = $writer_user->writtenOrders()->whereIn('status', ['in_progress', 'assigned', 'revision'])->count();
+        
+        // Calculate statistics
+        $stats = [
+            'total_orders' => $writer_user->writtenOrders()->count(),
+            'completed_orders' => $writer_user->writtenOrders()->where('status', 'completed')->count(),
+            'active_orders' => $writer_user->writtenOrders()->whereIn('status', ['in_progress', 'assigned', 'revision'])->count(),
+            'total_earnings' => $writer_user->writerPayments()->where('status', 'processed')->sum('amount'),
+            'pending_earnings' => $writer_user->writerPayments()->where('status', 'pending')->sum('amount'),
+            'average_rating' => $writer_user->writerProfile->rating ?? 0
+        ];
         
         // Rename the variable for the view
         $writer = $writer_user;
         
-        return view('admin.writers.show', compact('writer', 'completedOrders', 'activeOrders'));
+        return view('admin.writers.show', compact('writer', 'stats'));
     }
 
     public function edit(User $writer_user)
@@ -77,7 +84,10 @@ class WriterManagementController extends Controller
         }
 
         $writer_user->load('writerProfile');
-        return view('admin.writers.edit', compact('writer_user'));
+        // Rename the variable for the view
+        $writer = $writer_user;
+        
+        return view('admin.writers.edit', compact('writer'));
     }
 
     public function update(Request $request, User $writer_user)
@@ -226,5 +236,23 @@ class WriterManagementController extends Controller
         
         return redirect()->route('admin.applications.index')
             ->with('success', 'Application rejected successfully.');
+    }
+
+    public function changePassword(Request $request, User $writer_user)
+    {
+        if ($writer_user->role !== 'writer') {
+            return redirect()->route('admin.writers.index')
+                           ->with('error', 'User is not a writer.');
+        }
+
+        $validated = $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $writer_user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return back()->with('success', 'Writer password has been updated successfully.');
     }
 } 

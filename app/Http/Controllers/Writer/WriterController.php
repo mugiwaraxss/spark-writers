@@ -62,8 +62,6 @@ class WriterController extends Controller
                                      ->count(),
             'satisfaction_rate' => 95, // Placeholder or calculate from reviews
             'monthly_earnings' => WriterPayment::where('writer_id', $writer->id)
-                                             ->where('status', 'processed')
-                                             ->whereMonth('created_at', now()->month)
                                              ->sum('amount'),
         ];
         
@@ -75,7 +73,20 @@ class WriterController extends Controller
         $writer = Auth::user();
         $writer->load('writerProfile');
         
-        return view('writer.profile', compact('writer'));
+        $subjects = [
+            'essays' => 'Essays',
+            'research_papers' => 'Research Papers',
+            'dissertations' => 'Dissertations',
+            'technical_writing' => 'Technical Writing',
+            'creative_writing' => 'Creative Writing'
+        ];
+        
+        $writerSubjects = $writer->writerProfile->expertise_areas ?? [];
+        
+        // Initialize empty documents array for file upload component
+        $documents = [];
+        
+        return view('writer.profile', compact('writer', 'subjects', 'writerSubjects', 'documents'));
     }
 
     public function updateProfile(Request $request)
@@ -148,21 +159,14 @@ class WriterController extends Controller
         $writer = Auth::user();
         $writer->load('writerProfile');
         
-        $writer_expertise = $writer->writerProfile->expertise_areas ?? [];
-        $available_orders = collect();
+        // Get all available orders without filtering by expertise
+        $available_orders = Order::whereNull('writer_id')
+                               ->where('status', 'pending')
+                               ->with('client')
+                               ->latest()
+                               ->paginate(15);
         
-        if (!empty($writer_expertise)) {
-            $available_orders = Order::whereNull('writer_id')
-                                   ->where('status', 'pending')
-                                   ->with('client')
-                                   ->latest()
-                                   ->get()
-                                   ->filter(function ($order) use ($writer_expertise) {
-                                       return in_array($order->subject_area, $writer_expertise);
-                                   });
-        }
-        
-        return view('writer.available_orders', compact('available_orders', 'writer_expertise'));
+        return view('writer.available_orders', compact('available_orders'));
     }
 
     /**
@@ -170,18 +174,14 @@ class WriterController extends Controller
      */
     public function viewOrder(Order $order)
     {
-        // Check if this order is available for this writer
+        // Check if this order is available
         $writer = Auth::user();
         $writer->load('writerProfile');
         
-        $writer_expertise = $writer->writerProfile->expertise_areas ?? [];
-        
-        // Security check: only show pending, unassigned orders that match writer's expertise
-        if ($order->writer_id !== null || 
-            $order->status !== 'pending' || 
-            !in_array($order->subject_area, $writer_expertise)) {
+        // Security check: only show pending, unassigned orders
+        if ($order->writer_id !== null || $order->status !== 'pending') {
             return redirect()->route('writer.available-orders')
-                           ->with('error', 'This order is not available for you to claim.');
+                           ->with('error', 'This order is not available for claiming.');
         }
         
         $order->load(['client', 'files']);

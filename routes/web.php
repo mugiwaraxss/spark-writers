@@ -9,8 +9,10 @@ use App\Http\Controllers\Admin\PaymentManagementController;
 use App\Http\Controllers\Writer\WriterController;
 use App\Http\Controllers\Writer\AssignmentController;
 use App\Http\Controllers\Client\ClientController;
-use App\Http\Controllers\Client\OrderController;
+use App\Http\Controllers\Client\OrderController as ClientOrderController;
+use App\Http\Controllers\Client\PaymentController as ClientPaymentController;
 use App\Http\Controllers\Client\ReviewController;
+use App\Http\Controllers\Writer\MessageController as WriterMessageController;
 
 // Public routes
 Route::get('/', function () {
@@ -91,8 +93,9 @@ Route::middleware([\App\Http\Middleware\Authenticate::class, \App\Http\Middlewar
         Route::get('/{writer_user}', [WriterManagementController::class, 'show'])->name('show');
         Route::get('/{writer_user}/edit', [WriterManagementController::class, 'edit'])->name('edit');
         Route::put('/{writer_user}', [WriterManagementController::class, 'update'])->name('update');
-        Route::patch('/{writer_user}/toggle-status', [WriterManagementController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('/{writer_user}', [WriterManagementController::class, 'destroy'])->name('destroy');
+        Route::post('/{writer_user}/toggle-status', [WriterManagementController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{writer_user}/change-password', [WriterManagementController::class, 'changePassword'])->name('change-password');
     });
     
     // Writer applications (moved outside writers prefix)
@@ -139,19 +142,22 @@ Route::middleware([\App\Http\Middleware\Authenticate::class, \App\Http\Middlewar
         Route::get('/{order}', [AssignmentController::class, 'show'])->name('show');
         Route::post('/{order}/accept', [AssignmentController::class, 'acceptOrder'])->name('accept');
         Route::post('/{order}/submit', [AssignmentController::class, 'submitWork'])->name('submit');
-        Route::patch('/{order}/update-progress', [AssignmentController::class, 'updateProgress'])->name('update-progress');
-        Route::post('/{order}/start-revision', [AssignmentController::class, 'startRevision'])->name('start-revision');
+        Route::post('/{order}/revise', [AssignmentController::class, 'startRevision'])->name('revise');
         Route::post('/{order}/message', [AssignmentController::class, 'sendMessage'])->name('message');
         Route::post('/{order}/claim', [AssignmentController::class, 'claimOrder'])->name('claim');
-        Route::get('/{order}/download-submission', [AssignmentController::class, 'downloadSubmission'])->name('download-submission');
+        Route::get('/revisions', [AssignmentController::class, 'revisions'])->name('revisions');
+        Route::get('/revisions/{order}', [AssignmentController::class, 'viewRevision'])->name('revision');
+        Route::get('/{order}/download', [AssignmentController::class, 'downloadSubmission'])->name('download');
     });
     
-    // Revision management
-    Route::get('/revisions', [AssignmentController::class, 'revisions'])->name('revisions');
-    Route::get('/revisions/{order}', [AssignmentController::class, 'viewRevision'])->name('revisions.view');
-    
-    // Writer messages
-    Route::post('/messages/{assignment}', [AssignmentController::class, 'sendMessage'])->name('messages.store');
+    // Messages
+    Route::prefix('messages')->name('messages.')->group(function () {
+        Route::get('/', [WriterMessageController::class, 'index'])->name('index');
+        Route::get('/order/{order}', [WriterMessageController::class, 'showOrderMessages'])->name('order');
+        Route::post('/order/{order}/reply', [WriterMessageController::class, 'replyToOrder'])->name('reply');
+        Route::get('/direct', [WriterMessageController::class, 'showDirectMessages'])->name('direct');
+        Route::post('/direct/reply', [WriterMessageController::class, 'replyToDirectMessage'])->name('reply.direct');
+    });
     
     // Password update
     Route::post('/password/update', [WriterController::class, 'updatePassword'])->name('password.update');
@@ -173,22 +179,22 @@ Route::middleware([\App\Http\Middleware\Authenticate::class, \App\Http\Middlewar
     
     // Order management
     Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('/create', [OrderController::class, 'create'])->name('create');
-        Route::post('/', [OrderController::class, 'store'])->name('store');
-        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
-        Route::get('/{order}/payment', [OrderController::class, 'payment'])->name('payment');
-        Route::post('/{order}/payment', [OrderController::class, 'processPayment'])->name('process-payment');
-        Route::post('/{order}/revision', [OrderController::class, 'requestRevision'])->name('request-revision');
-        Route::post('/{order}/message', [OrderController::class, 'sendMessage'])->name('message');
-        Route::post('/{order}/dispute', [OrderController::class, 'disputeOrder'])->name('dispute');
-        Route::get('/{order}/download', [OrderController::class, 'download'])->name('download');
+        Route::get('/create', [ClientOrderController::class, 'create'])->name('create');
+        Route::post('/', [ClientOrderController::class, 'store'])->name('store');
+        Route::get('/{order}', [ClientOrderController::class, 'show'])->name('show');
+        Route::get('/{order}/payment', [ClientOrderController::class, 'payment'])->name('payment');
+        Route::post('/{order}/payment', [ClientOrderController::class, 'processPayment'])->name('process-payment');
+        Route::post('/{order}/revision', [ClientOrderController::class, 'requestRevision'])->name('request-revision');
+        Route::post('/{order}/message', [ClientOrderController::class, 'sendMessage'])->name('message');
+        Route::post('/{order}/dispute', [ClientOrderController::class, 'disputeOrder'])->name('dispute');
+        Route::get('/{order}/download', [ClientOrderController::class, 'download'])->name('download');
     });
     
     // Messages
-    Route::post('/messages/{order}', [OrderController::class, 'sendMessage'])->name('messages.store');
+    Route::post('/messages/{order}', [ClientOrderController::class, 'sendMessage'])->name('messages.store');
     
     // Payment routes
-    Route::get('/payments/{order}/pay', [ClientController::class, 'paymentForm'])->name('payments.pay');
+    Route::get('/payments/{order}/pay', [ClientPaymentController::class, 'paymentForm'])->name('payments.pay');
     
     // Reviews
     Route::prefix('reviews')->name('reviews.')->group(function () {

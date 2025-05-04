@@ -36,6 +36,8 @@ class OrderController extends Controller
             'subject_area' => 'required|string',
             'word_count' => 'required|integer|min:250|max:10000',
             'deadline' => 'required|date|after:now',
+            'citation_style' => 'required|string',
+            'sources_required' => 'nullable|integer|min:0',
             'files.*' => 'nullable|file|max:10240', // 10MB max per file
         ]);
 
@@ -73,6 +75,8 @@ class OrderController extends Controller
             'deadline' => $request->deadline,
             'status' => 'pending',
             'price' => $price,
+            'citation_style' => $request->citation_style,
+            'sources_required' => $request->sources_required,
         ]);
 
         // Upload instruction files if any

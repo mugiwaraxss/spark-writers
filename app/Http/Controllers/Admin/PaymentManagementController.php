@@ -127,15 +127,14 @@ class PaymentManagementController extends Controller
             return back()->with('error', 'A payment for this writer already exists.');
         }
 
-        $request->validate([
-            'amount' => 'required|numeric|min:1',
-        ]);
+        // Calculate writer's payment (40% of order amount)
+        $writerAmount = $order->amount * 0.4;
 
         // Create the writer payment
         $payment = WriterPayment::create([
             'writer_id' => $order->writer_id,
             'order_id' => $order->id,
-            'amount' => $request->amount,
+            'amount' => $writerAmount,
             'status' => 'pending',
             'payment_date' => null,
         ]);
